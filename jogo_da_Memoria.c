@@ -34,6 +34,8 @@ typedef struct Carta {
     struct Carta *proxima;
 } Carta;
 
+const char* naipeParaString(Naipe naipe);
+
 typedef struct Jogador {
     char nome[MAX_NOME];
     int pontuacao;
@@ -110,26 +112,35 @@ bool inicializarJogo(JogoMemoria *jogo, const char *nomeJogador) {
         return false;
     }
     int valores[NUM_PARES * 2];
+    Naipe naipes[NUM_PARES * 2];
     for (int i = 0; i < NUM_PARES; i++) {
         valores[2 * i] = i + 1;
         valores[2 * i + 1] = i + 1;
+        Naipe naipe = (Naipe)(i % 4); 
+        naipes[2 * i] = naipe;
+        naipes[2 * i + 1] = naipe;
     }
     srand(time(NULL));
     for (int i = 0; i < NUM_PARES * 2; i++) {
         int j = rand() % (NUM_PARES * 2);
-        int temp = valores[i];
+       
+        int tempVal = valores[i];
         valores[i] = valores[j];
-        valores[j] = temp;
+        valores[j] = tempVal;
+        Naipe tempNaipe = naipes[i];
+        naipes[i] = naipes[j];
+        naipes[j] = tempNaipe;
     }
     int index = 0;
     for (int i = 0; i < TAMANHO_TABULEIRO; i++) {
         for (int j = 0; j < TAMANHO_TABULEIRO; j++) {
             if (index < NUM_PARES * 2) {
-                jogo->cartas[i][j] = criarCarta(valores[index++], SEM_NAIPE);
+                jogo->cartas[i][j] = criarCarta(valores[index], naipes[index]);
                 if (jogo->cartas[i][j] == NULL) {
                     printf("Erro ao criar carta na posicao %d,%d\n", i, j);
                     return false;
                 }
+                index++;
             } else {
                 jogo->cartas[i][j] = NULL;
             }
@@ -383,6 +394,7 @@ void jogarJogoMemoria() {
         exibirTabuleiro(&jogo);
         if (jogo.cartas[linha1][coluna1]->valor == jogo.cartas[linha2][coluna2]->valor) {
             printf("Par encontrado! +10 pontos\n");
+            printf("Naipe do par: %s\n", naipeParaString(jogo.cartas[linha1][coluna1]->naipe));
             jogo.cartas[linha1][coluna1]->encontrada = true;
             jogo.cartas[linha2][coluna2]->encontrada = true;
             jogo.jogadores->pontuacao += 10;
@@ -446,6 +458,16 @@ void exibirMenu() {
                 printf("Opcao invalida!\n");
         }
     } while (opcao != 3);
+}
+
+const char* naipeParaString(Naipe naipe) {
+    switch (naipe) {
+        case COPAS: return "Copas";
+        case OUROS: return "Ouros";
+        case ESPADAS: return "Espadas";
+        case PAUS: return "Paus";
+        default: return "Sem Naipe";
+    }
 }
 
 int main() {
